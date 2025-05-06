@@ -123,7 +123,6 @@ export default function AddPropertyPage() {
             maxOccupants: formData.maxOccupants,
             video: formData.video,
 
-            // ✅ Must be arrays of strings
             amenities: Array.isArray(formData.amenities)
                 ? formData.amenities
                 : Object.keys(formData.amenities).filter((k) => formData.amenities[k]),

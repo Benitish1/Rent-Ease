@@ -1,10 +1,9 @@
 package com.houserenting.rentease.controller;
 
 import com.houserenting.rentease.dto.PropertyRequest;
-import com.houserenting.rentease.model.Property;
+import com.houserenting.rentease.dto.PropertyResponse;
 import com.houserenting.rentease.service.PropertyService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,54 +17,57 @@ public class PropertyController {
 
     private final PropertyService propertyService;
 
-    // === CREATE PROPERTY ===
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Property> createProperty(
-            @RequestPart("property") PropertyRequest propertyRequest,
-            @RequestPart("images") List<MultipartFile> images,
-            @RequestParam("landlordId") Long landlordId
-    ) {
-        Property saved = propertyService.createProperty(propertyRequest, images, landlordId);
-        return ResponseEntity.ok(saved);
+    @GetMapping("/my")
+    public ResponseEntity<List<PropertyResponse>> getMyProperties(@RequestParam Long landlord) {
+        return ResponseEntity.ok(propertyService.getPropertiesByLandlord(landlord));
     }
 
-    // === GET PROPERTIES BY LANDLORD ===
-    @GetMapping("/my")
-    public ResponseEntity<List<Property>> getMyProperties(@RequestParam Long landlordId) {
+    @PostMapping
+    public ResponseEntity<PropertyResponse> createProperty(
+            @RequestPart("property") PropertyRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam Long landlordId) {
+        return ResponseEntity.ok(propertyService.createProperty(request, images, landlordId));
+    }
+
+    @GetMapping("/landlord/{landlordId}")
+    public ResponseEntity<List<PropertyResponse>> getPropertiesByLandlord(@PathVariable Long landlordId) {
         return ResponseEntity.ok(propertyService.getPropertiesByLandlord(landlordId));
     }
 
-    // === GET ALL APPROVED PROPERTIES ===
     @GetMapping
-    public ResponseEntity<List<Property>> getAllApprovedProperties() {
-        List<Property> properties = propertyService.getApprovedProperties();
-        return ResponseEntity.ok(properties);
+    public ResponseEntity<List<PropertyResponse>> getAllProperties() {
+        return ResponseEntity.ok(propertyService.getAllProperties());
     }
 
-    // === SEARCH PROPERTIES ===
+    @GetMapping("/available")
+    public ResponseEntity<List<PropertyResponse>> getAvailableProperties() {
+        return ResponseEntity.ok(propertyService.getAllAvailableProperties());
+    }
+
+    @GetMapping("/approved")
+    public ResponseEntity<List<PropertyResponse>> getApprovedProperties() {
+        return ResponseEntity.ok(propertyService.getApprovedProperties());
+    }
+
     @GetMapping("/search")
-    public ResponseEntity<List<Property>> searchProperties(
+    public ResponseEntity<List<PropertyResponse>> searchProperties(
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String propertyType,
             @RequestParam(required = false) Integer bedrooms,
             @RequestParam(required = false) Boolean available,
-            @RequestParam(required = false) Long landlordId
-    ) {
-        List<Property> results = propertyService.searchProperties(
-                location, minPrice, maxPrice, propertyType, bedrooms, available, landlordId
-        );
-        return ResponseEntity.ok(results);
+            @RequestParam(required = false) Long landlordId) {
+        return ResponseEntity.ok(propertyService.searchProperties(
+                location, minPrice, maxPrice, propertyType, bedrooms, available, landlordId));
     }
 
-    // === DELETE PROPERTY ===
     @DeleteMapping("/{propertyId}")
-    public ResponseEntity<?> deleteProperty(
+    public ResponseEntity<Void> deleteProperty(
             @PathVariable Long propertyId,
-            @RequestParam Long landlordId
-    ) {
+            @RequestParam Long landlordId) {
         propertyService.deleteProperty(propertyId, landlordId);
-        return ResponseEntity.ok("Property deleted successfully");
+        return ResponseEntity.ok().build();
     }
 }

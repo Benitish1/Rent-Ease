@@ -1,4 +1,3 @@
-// lib/api.js
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8082/api";
@@ -6,29 +5,25 @@ const API_BASE_URL = "http://localhost:8082/api";
 // Basic Axios client (no auth headers)
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // Enable sending cookies and authentication headers
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // === AUTH ENDPOINTS ===
 
-export const signup = async (userData) => {
+export const signup = async (userData: any) => {
   try {
     const response = await apiClient.post("/auth/signup", userData);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     throw error.response?.data || error;
   }
 };
 
 export const registerLandlord = async (
-  firstName,
-  lastName,
-  email,
-  phone,
-  password
+  firstName: string,
+  lastName: string,
+  email: string,
+  phone: string,
+  password: string
 ) => {
   return signup({
     firstName,
@@ -41,11 +36,11 @@ export const registerLandlord = async (
 };
 
 export const registerTenant = async (
-  firstName,
-  lastName,
-  email,
-  phone,
-  password
+  firstName: string,
+  lastName: string,
+  email: string,
+  phone: string,
+  password: string
 ) => {
   return signup({
     firstName,
@@ -58,11 +53,11 @@ export const registerTenant = async (
 };
 
 export const registerAdmin = async (
-  firstName,
-  lastName,
-  email,
-  phone,
-  password
+  firstName: string,
+  lastName: string,
+  email: string,
+  phone: string,
+  password: string
 ) => {
   return signup({
     firstName,
@@ -106,7 +101,7 @@ export const registerSampleAdmin = async () => {
 
 // === LOGIN FUNCTIONS ===
 
-export const login = async (email, password, role) => {
+export const login = async (email: string, password: string, role: string) => {
   try {
     const response = await apiClient.post("/auth/login", {
       email,
@@ -116,20 +111,20 @@ export const login = async (email, password, role) => {
 
     // No token saving
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     throw error.response?.data || error;
   }
 };
 
-export const loginLandlord = async (email, password) => {
+export const loginLandlord = async (email: string, password: string) => {
   return login(email, password, "LANDLORD");
 };
 
-export const loginTenant = async (email, password) => {
+export const loginTenant = async (email: string, password: string) => {
   return login(email, password, "TENANT");
 };
 
-export const loginAdmin = async (email, password) => {
+export const loginAdmin = async (email: string, password: string) => {
   return login(email, password, "ADMIN");
 };
 
@@ -140,65 +135,84 @@ export const logout = async () => {
   return { success: true, message: "Logged out (no auth system active)" };
 };
 
-// === USER PROFILE (REMOVE IF NOT USED) ===
+// === USER PROFILE ===
 
 export const fetchProfile = async () => {
   try {
     const response = await apiClient.get("/user/profile");
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     throw error.response?.data || error;
   }
 };
 
 // === PROPERTY ENDPOINTS ===
 
-export const fetchProperties = async () => {
+export interface Property {
+  id: number;
+  title: string;
+  type: string;
+  description: string;
+  address: string;
+  neighborhood: string;
+  city: string;
+  district: string;
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  mainPhoto: string;
+  additionalPhotos: string[];
+  price: number;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "RENTED" | "INACTIVE";
+  landlordId: number;
+  landlordName: string;
+}
+
+export const fetchProperties = async (): Promise<Property[]> => {
   try {
-    const response = await apiClient.get("/properties/my", {
-      params: { landlord: 8 },
-    });
+    const response = await apiClient.get("/properties/landlord/8"); // Using the landlord ID we created
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     throw error.response?.data || error;
   }
 };
 
-export const deleteProperty = async (propertyId, landlordId) => {
+export const deleteProperty = async (propertyId: number, landlordId: number): Promise<void> => {
   try {
     const response = await apiClient.delete(`/properties/${propertyId}`, {
-      params: { landlordId: landlordId.toString() },
+      params: { landlordId: landlordId.toString() }
     });
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     throw error.response?.data || error;
   }
 };
 
-export const createProperty = async (propertyData, images, landlordId) => {
+export const createProperty = async (
+  propertyData: Partial<Property>,
+  images: File[],
+  landlordId: number
+): Promise<Property> => {
   try {
     const formData = new FormData();
-    formData.append(
-      "property",
-      new Blob([JSON.stringify(propertyData)], {
-        type: "application/json",
-      })
-    );
-
+    formData.append('property', new Blob([JSON.stringify(propertyData)], {
+      type: 'application/json'
+    }));
+    
     if (images && images.length > 0) {
-      images.forEach((image) => {
-        formData.append("images", image);
+      images.forEach(image => {
+        formData.append('images', image);
       });
     }
 
-    const response = await apiClient.post("/properties", formData, {
+    const response = await apiClient.post('/properties', formData, {
       params: { landlordId },
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     throw error.response?.data || error;
   }
-};
+}; 
