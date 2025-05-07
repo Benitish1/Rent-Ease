@@ -1,4 +1,4 @@
-import { PropertyCard } from "@/components/property-card"
+import { PropertyCard } from "@/components/property-card";
 
 export function FeaturedProperties() {
   // Mock data for featured properties
@@ -11,7 +11,8 @@ export function FeaturedProperties() {
       bedrooms: 2,
       bathrooms: 2,
       area: 85,
-      image: "/properties/modern-apartment.png",
+      image:
+        "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070",
       rating: 4.8,
       isFeatured: true,
     },
@@ -23,7 +24,8 @@ export function FeaturedProperties() {
       bedrooms: 4,
       bathrooms: 3,
       area: 220,
-      image: "/properties/luxury-villa.png",
+      image:
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070",
       rating: 4.9,
       isFeatured: true,
     },
@@ -35,7 +37,8 @@ export function FeaturedProperties() {
       bedrooms: 1,
       bathrooms: 1,
       area: 45,
-      image: "/properties/cozy-studio.png",
+      image:
+        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2070",
       rating: 4.6,
       isNew: true,
     },
@@ -47,7 +50,8 @@ export function FeaturedProperties() {
       bedrooms: 3,
       bathrooms: 2,
       area: 150,
-      image: "/properties/family-home.png",
+      image:
+        "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?q=80&w=2070",
       rating: 4.7,
     },
     {
@@ -58,7 +62,8 @@ export function FeaturedProperties() {
       bedrooms: 3,
       bathrooms: 3,
       area: 180,
-      image: "/properties/penthouse.png",
+      image:
+        "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070",
       rating: 5.0,
       isFeatured: true,
     },
@@ -70,17 +75,18 @@ export function FeaturedProperties() {
       bedrooms: 3,
       bathrooms: 2.5,
       area: 140,
-      image: "/properties/townhouse.png",
+      image:
+        "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?q=80&w=2070",
       rating: 4.5,
       isNew: true,
     },
-  ]
+  ];
 
   return (
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {properties.map((property) => (
-            <PropertyCard key={property.id} {...property} />
-        ))}
-      </div>
-  )
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {properties.map((property) => (
+        <PropertyCard key={property.id} {...property} />
+      ))}
+    </div>
+  );
 }

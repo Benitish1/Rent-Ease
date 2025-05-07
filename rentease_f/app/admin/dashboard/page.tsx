@@ -49,6 +49,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Check for session expiration
   useEffect(() => {
@@ -62,6 +63,25 @@ export default function AdminDashboard() {
     // Check session every minute
     const interval = setInterval(checkSession, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Get user data from localStorage
+    try {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser && parsedUser.lastName) {
+          setCurrentUser(parsedUser);
+        } else {
+          console.error("Invalid user data structure:", parsedUser);
+          setCurrentUser(null);
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      setCurrentUser(null);
+    }
   }, []);
 
   const handleSessionExpired = () => {
@@ -291,7 +311,7 @@ export default function AdminDashboard() {
           <div className="p-6">
             <div className="mb-8">
               <h1 className="text-2xl font-bold tracking-tight">
-                Admin Dashboard
+                Welcome back, {currentUser?.lastName || "Admin"}
               </h1>
               <p className="text-muted-foreground">
                 Platform overview and management

@@ -116,17 +116,17 @@ export default function SignupPage() {
     <div className="min-h-screen grid md:grid-cols-2">
       <div className="hidden md:block relative">
         <Image
-          src="/placeholder.svg"
+          src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?q=80&w=2070"
           alt="Modern apartment interior"
           fill
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
-          <div className="p-12 text-white max-w-md">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40 flex items-center">
+          <div className="p-12 text-white max-w-xl">
             <div className="flex items-center gap-2 mb-8">
               <div className="rounded-md bg-primary p-1">
                 <svg
-                  className="h-6 w-6 text-primary-foreground"
+                  className="h-8 w-8 text-primary-foreground"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -135,12 +135,12 @@ export default function SignupPage() {
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
               </div>
-              <span className="text-xl font-bold">RentEase</span>
+              <span className="text-2xl font-bold">RentEase</span>
             </div>
-            <h1 className="text-3xl font-bold mb-4">
+            <h1 className="text-4xl font-bold mb-6">
               Join our community today
             </h1>
-            <p className="text-white/80">
+            <p className="text-xl text-white/90">
               Create an account to start browsing properties and connect with
               landlords.
             </p>

@@ -51,6 +51,7 @@ export default function TenantDashboard() {
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Check for session expiration
   useEffect(() => {
@@ -64,6 +65,20 @@ export default function TenantDashboard() {
     // Check session every minute
     const interval = setInterval(checkSession, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Get user data from localStorage
+    try {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setCurrentUser(parsedUser);
+      }
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      setCurrentUser(null);
+    }
   }, []);
 
   const handleSessionExpired = () => {
@@ -293,7 +308,7 @@ export default function TenantDashboard() {
           <div className="p-6">
             <div className="mb-8">
               <h1 className="text-2xl font-bold tracking-tight">
-                Welcome back, John
+                Welcome back, {currentUser?.lastName || "User"}
               </h1>
               <p className="text-muted-foreground">
                 Here's what's happening with your rentals.

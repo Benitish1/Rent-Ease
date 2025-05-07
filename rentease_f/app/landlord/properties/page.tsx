@@ -49,6 +49,9 @@ export default function PropertiesPage() {
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
     null
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const propertiesPerPage = 9;
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,7 +63,7 @@ export default function PropertiesPage() {
       const fetched = await fetchProperties();
       console.log("Fetched properties:", fetched);
       if (Array.isArray(fetched)) {
-        setProperties(fetched);
+        setProperties(fetched.sort((a, b) => a.title.localeCompare(b.title)));
       }
     } catch (err) {
       console.error("Error loading properties:", err);
@@ -120,9 +123,15 @@ export default function PropertiesPage() {
               type="text"
               placeholder="Search properties..."
               className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="sm:w-auto">
+          <Button
+            variant="outline"
+            className="sm:w-auto"
+            onClick={() => setCurrentPage(1)}
+          >
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button>
@@ -146,36 +155,100 @@ export default function PropertiesPage() {
             </TabsTrigger>
           </TabsList>
 
-          {["all", "APPROVED", "PENDING", "RENTED"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="mt-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {properties
-                  .filter((p) => tab === "all" || p.status === tab)
-                  .map((property) => (
-                    <PropertyCard
-                      key={property.id}
-                      property={property}
-                      onDelete={() => setPropertyToDelete(property)}
-                    />
-                  ))}
-              </div>
-              {tab === "RENTED" &&
-                properties.filter((p) => p.status === "RENTED").length ===
-                  0 && (
+          {["all", "APPROVED", "PENDING", "RENTED"].map((tab) => {
+            const filteredProperties = properties
+              .filter((p) => tab === "all" || p.status === tab)
+              .filter(
+                (p) =>
+                  searchQuery === "" ||
+                  p.title.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+            const totalPages = Math.ceil(
+              filteredProperties.length / propertiesPerPage
+            );
+            const startIndex = (currentPage - 1) * propertiesPerPage;
+            const paginatedProperties = filteredProperties.slice(
+              startIndex,
+              startIndex + propertiesPerPage
+            );
+
+            return (
+              <TabsContent key={tab} value={tab} className="mt-6">
+                {filteredProperties.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="rounded-full bg-muted p-6 mb-4">
-                      <Home className="h-10 w-10 text-muted-foreground" />
+                      <Search className="h-10 w-10 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-medium mb-2">
-                      No rented properties
+                      No properties found
                     </h3>
                     <p className="text-muted-foreground max-w-md">
-                      Properties that are currently rented will appear here.
+                      {searchQuery
+                        ? `No properties found matching "${searchQuery}"`
+                        : "No properties available in this category"}
                     </p>
                   </div>
+                ) : (
+                  <>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {paginatedProperties.map((property) => (
+                        <PropertyCard
+                          key={property.id}
+                          property={property}
+                          onDelete={() => setPropertyToDelete(property)}
+                        />
+                      ))}
+                    </div>
+                    {tab === "RENTED" &&
+                      properties.filter((p) => p.status === "RENTED").length ===
+                        0 && (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="rounded-full bg-muted p-6 mb-4">
+                            <Home className="h-10 w-10 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-lg font-medium mb-2">
+                            No rented properties
+                          </h3>
+                          <p className="text-muted-foreground max-w-md">
+                            Properties that are currently rented will appear
+                            here.
+                          </p>
+                        </div>
+                      )}
+                    {filteredProperties.length > 0 && (
+                      <div className="mt-6 flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          disabled={currentPage === 1}
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages)
+                            )
+                          }
+                          disabled={currentPage === totalPages}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
-            </TabsContent>
-          ))}
+              </TabsContent>
+            );
+          })}
         </Tabs>
 
         <AlertDialog

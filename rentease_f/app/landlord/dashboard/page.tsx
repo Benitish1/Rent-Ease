@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { logout } from "@/lib/api";
+import { logout, fetchProperties } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -48,32 +48,54 @@ import {
 
 export default function LandlordDashboard() {
   const router = useRouter();
-  const {toast} = useToast();
+  const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-
-  const [currentUser, setCurrentUser] = useState<{ lastName: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [totalProperties, setTotalProperties] = useState(0);
+  const [recentProperties, setRecentProperties] = useState<Property[]>([]);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/user", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-          },
-        });
-        if (!res.ok) throw new Error("Failed to fetch user");
-        const data = await res.json();
-        setCurrentUser({lastName: data.lastName});
+    // Get user data from localStorage
+    try {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser && parsedUser.lastName) {
+          setCurrentUser(parsedUser);
+        } else {
+          console.error("Invalid user data structure:", parsedUser);
+          setCurrentUser(null);
+        }
+      }
       } catch (error) {
-        console.error("Error fetching user:", error);
+      console.error("Error parsing user data:", error);
         setCurrentUser(null);
       }
-    };
-
-    fetchUser();
   }, []);
 
+  useEffect(() => {
+    const fetchPropertiesData = async () => {
+      try {
+        const properties = await fetchProperties();
+        if (Array.isArray(properties)) {
+          setTotalProperties(properties.length);
+          // Sort by most recent and take first 5
+          const sortedProperties = properties
+            .sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            )
+            .slice(0, 5);
+          setRecentProperties(sortedProperties);
+        }
+      } catch (error) {
+        console.error("Error fetching properties:", error);
+      }
+    };
+    fetchPropertiesData();
+  }, []);
 
   // Check for session expiration
   useEffect(() => {
@@ -146,7 +168,6 @@ export default function LandlordDashboard() {
     setShowLogoutDialog(false);
   };
 
-
   return (
       <div className="min-h-screen bg-background">
         <div className="flex">
@@ -165,8 +186,8 @@ export default function LandlordDashboard() {
                       strokeLinejoin="round"
                       className="h-5 w-5 text-primary-foreground"
                   >
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
                 </div>
                 <span className="text-lg font-bold">RentEase</span>
@@ -177,21 +198,21 @@ export default function LandlordDashboard() {
                   href="/landlord/dashboard"
                   className="flex items-center gap-3 rounded-lg bg-accent px-3 py-2 text-accent-foreground"
               >
-                <Home className="h-5 w-5"/>
+              <Home className="h-5 w-5" />
                 <span>Dashboard</span>
               </Link>
               <Link
                   href="/landlord/properties"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <Home className="h-5 w-5"/>
+              <Home className="h-5 w-5" />
                 <span>Properties</span>
               </Link>
               <Link
                   href="/landlord/bookings"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <Calendar className="h-5 w-5"/>
+              <Calendar className="h-5 w-5" />
                 <span>Bookings</span>
                 <Badge className="ml-auto">2</Badge>
               </Link>
@@ -199,28 +220,28 @@ export default function LandlordDashboard() {
                   href="/landlord/tenants"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <Users className="h-5 w-5"/>
+              <Users className="h-5 w-5" />
                 <span>Tenants</span>
               </Link>
               <Link
                   href="/landlord/payments"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <CreditCard className="h-5 w-5"/>
+              <CreditCard className="h-5 w-5" />
                 <span>Payments</span>
               </Link>
               <Link
                   href="/landlord/analytics"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <BarChart3 className="h-5 w-5"/>
+              <BarChart3 className="h-5 w-5" />
                 <span>Analytics</span>
               </Link>
               <Link
                   href="/landlord/messages"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <MessageSquare className="h-5 w-5"/>
+              <MessageSquare className="h-5 w-5" />
                 <span>Messages</span>
                 <Badge className="ml-auto">5</Badge>
               </Link>
@@ -228,7 +249,7 @@ export default function LandlordDashboard() {
                   href="/landlord/notifications"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <Bell className="h-5 w-5"/>
+              <Bell className="h-5 w-5" />
                 <span>Notifications</span>
                 <Badge className="ml-auto">3</Badge>
               </Link>
@@ -236,14 +257,14 @@ export default function LandlordDashboard() {
                   href="/landlord/profile"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <User className="h-5 w-5"/>
+              <User className="h-5 w-5" />
                 <span>Profile</span>
               </Link>
               <Link
                   href="/landlord/settings"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                <Settings className="h-5 w-5"/>
+              <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </Link>
             </nav>
@@ -258,7 +279,7 @@ export default function LandlordDashboard() {
                       className="w-full justify-start text-muted-foreground"
                       disabled={isLoggingOut}
                   >
-                    <LogOut className="mr-2 h-5 w-5"/>
+                  <LogOut className="mr-2 h-5 w-5" />
                     {isLoggingOut ? "Logging out..." : "Log out"}
                   </Button>
                 </AlertDialogTrigger>
@@ -302,18 +323,17 @@ export default function LandlordDashboard() {
                     strokeLinejoin="round"
                     className="h-6 w-6"
                 >
-                  <line x1="4" x2="20" y1="12" y2="12"/>
-                  <line x1="4" x2="20" y1="6" y2="6"/>
-                  <line x1="4" x2="20" y1="18" y2="18"/>
+                <line x1="4" x2="20" y1="12" y2="12" />
+                <line x1="4" x2="20" y1="6" y2="6" />
+                <line x1="4" x2="20" y1="18" y2="18" />
                 </svg>
                 <span className="sr-only">Toggle menu</span>
               </Button>
               <div className="ml-auto flex items-center gap-4">
                 <Button variant="outline" size="icon">
-                  <Bell className="h-5 w-5"/>
+                <Bell className="h-5 w-5" />
                   <span className="sr-only">Notifications</span>
-                  <span
-                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
                   3
                 </span>
                 </Button>
@@ -330,7 +350,7 @@ export default function LandlordDashboard() {
             <div className="p-6">
               <div className="mb-8">
                 <h1 className="text-2xl font-bold tracking-tight">
-                  Welcome back, {currentUser?.lastName}
+                Welcome back, {currentUser?.lastName || "User"}
                 </h1>
                 <p className="text-muted-foreground">
                   Here's what's happening with your properties.
@@ -338,17 +358,16 @@ export default function LandlordDashboard() {
               </div>
             </div>
 
-
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
                     Total Properties
                   </CardTitle>
-                  <Home className="h-4 w-4 text-muted-foreground"/>
+                <Home className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">5</div>
+                <div className="text-2xl font-bold">{totalProperties}</div>
                   <p className="text-xs text-muted-foreground">
                     +1 from last month
                   </p>
@@ -359,7 +378,7 @@ export default function LandlordDashboard() {
                   <CardTitle className="text-sm font-medium">
                     Active Tenants
                   </CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground"/>
+                <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">8</div>
@@ -373,7 +392,7 @@ export default function LandlordDashboard() {
                   <CardTitle className="text-sm font-medium">
                     Monthly Revenue
                   </CardTitle>
-                  <CreditCard className="h-4 w-4 text-muted-foreground"/>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">$8,500</div>
@@ -387,7 +406,7 @@ export default function LandlordDashboard() {
                   <CardTitle className="text-sm font-medium">
                     Occupancy Rate
                   </CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground"/>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">92%</div>
@@ -408,188 +427,74 @@ export default function LandlordDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    <div className="flex items-center gap-4">
+                  {recentProperties.map((property) => (
+                    <div key={property.id} className="flex items-center gap-4">
                       <div className="relative h-16 w-16 overflow-hidden rounded-md">
                         <Image
-                            src="/placeholder.svg?height=64&width=64"
-                            alt="Luxury Villa"
+                          src={property.mainPhoto || "/placeholder.svg"}
+                          alt={property.title}
                             fill
                             className="object-cover"
                         />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold">
-                          Luxury Villa with Pool
-                        </h3>
+                        <h3 className="font-semibold">{property.title}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Nyarutarama, Kigali
+                          {property.neighborhood}, {property.city}
                         </p>
                         <div className="mt-1 flex items-center gap-2">
                           <Badge
                               variant="outline"
-                              className="bg-green-50 text-green-700 hover:bg-green-50"
+                            className={`${
+                              property.status === "APPROVED"
+                                ? "bg-green-50 text-green-700 hover:bg-green-50"
+                                : property.status === "PENDING"
+                                ? "bg-amber-50 text-amber-700 hover:bg-amber-50"
+                                : "bg-blue-50 text-blue-700 hover:bg-blue-50"
+                            }`}
                           >
-                            Occupied
+                            {property.status === "APPROVED"
+                              ? "Available"
+                              : property.status === "PENDING"
+                              ? "Pending"
+                              : "Rented"}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            3 tenants
+                            {property.status === "RENTED"
+                              ? `${property.tenants?.length || 0} tenants`
+                              : "Available now"}
                           </span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">$2,500/mo</p>
-                        <p className="text-sm text-muted-foreground">
-                          8 months left on lease
+                        <p className="font-semibold">
+                          ${property.price?.toLocaleString() || "N/A"}/mo
                         </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                        <Image
-                            src="/placeholder.svg?height=64&width=64"
-                            alt="Modern Apartment"
-                            fill
-                            className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">
-                          Modern Apartment with City View
-                        </h3>
                         <p className="text-sm text-muted-foreground">
-                          Kigali Heights, Kigali
+                          {property.status === "RENTED"
+                            ? `${
+                                property.leaseEndDate
+                                  ? new Date(
+                                      property.leaseEndDate
+                                    ).toLocaleDateString()
+                                  : "N/A"
+                              }`
+                            : "Available now"}
                         </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 hover:bg-green-50"
-                          >
-                            Occupied
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            2 tenants
-                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold">$1,200/mo</p>
-                        <p className="text-sm text-muted-foreground">
-                          5 months left on lease
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                        <Image
-                            src="/placeholder.svg?height=64&width=64"
-                            alt="Cozy Studio"
-                            fill
-                            className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">
-                          Cozy Studio in City Center
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Kimihurura, Kigali
-                        </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 hover:bg-green-50"
-                          >
-                            Occupied
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            1 tenant
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">$800/mo</p>
-                        <p className="text-sm text-muted-foreground">
-                          3 months left on lease
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                        <Image
-                            src="/placeholder.svg?height=64&width=64"
-                            alt="Family Home"
-                            fill
-                            className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">
-                          Family Home with Garden
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Kibagabaga, Kigali
-                        </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Badge
-                              variant="outline"
-                              className="bg-green-50 text-green-700 hover:bg-green-50"
-                          >
-                            Occupied
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            4 tenants
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">$1,800/mo</p>
-                        <p className="text-sm text-muted-foreground">
-                          11 months left on lease
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                        <Image
-                            src="/placeholder.svg?height=64&width=64"
-                            alt="Penthouse"
-                            fill
-                            className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">
-                          Penthouse with Panoramic Views
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Kacyiru, Kigali
-                        </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Badge
-                              variant="outline"
-                              className="bg-amber-50 text-amber-700 hover:bg-amber-50"
-                          >
-                            Vacant
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Listed 2 weeks ago
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">$3,000/mo</p>
-                        <p className="text-sm text-muted-foreground">
-                          Available now
-                        </p>
-                      </div>
-                    </div>
+                  ))}
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button variant="outline">View All Properties</Button>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4"/>
+                <Button variant="outline" asChild>
+                  <Link href="/landlord/properties">View All Properties</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/landlord/properties/add">
+                    <Plus className="mr-2 h-4 w-4" />
                     Add Property
+                  </Link>
                   </Button>
                 </CardFooter>
               </Card>
@@ -638,11 +543,7 @@ export default function LandlordDashboard() {
                           <Button size="sm" className="w-full">
                             Accept
                           </Button>
-                          <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                          >
+                        <Button variant="outline" size="sm" className="w-full">
                             Decline
                           </Button>
                         </div>
@@ -683,11 +584,7 @@ export default function LandlordDashboard() {
                           <Button size="sm" className="w-full">
                             Accept
                           </Button>
-                          <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                          >
+                        <Button variant="outline" size="sm" className="w-full">
                             Decline
                           </Button>
                         </div>
@@ -713,12 +610,10 @@ export default function LandlordDashboard() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700">
-                        <CheckCircle2 className="h-5 w-5"/>
+                      <CheckCircle2 className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">
-                          Rent Payment - Luxury Villa
-                        </p>
+                      <p className="font-medium">Rent Payment - Luxury Villa</p>
                         <p className="text-sm text-muted-foreground">
                           From: John & Lisa Smith
                         </p>
@@ -732,7 +627,7 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700">
-                        <CheckCircle2 className="h-5 w-5"/>
+                      <CheckCircle2 className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">
@@ -751,12 +646,10 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700">
-                        <CheckCircle2 className="h-5 w-5"/>
+                      <CheckCircle2 className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">
-                          Rent Payment - Cozy Studio
-                        </p>
+                      <p className="font-medium">Rent Payment - Cozy Studio</p>
                         <p className="text-sm text-muted-foreground">
                           From: Michael Chen
                         </p>
@@ -770,12 +663,10 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700">
-                        <CheckCircle2 className="h-5 w-5"/>
+                      <CheckCircle2 className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">
-                          Rent Payment - Family Home
-                        </p>
+                      <p className="font-medium">Rent Payment - Family Home</p>
                         <p className="text-sm text-muted-foreground">
                           From: Amina Diallo
                         </p>
@@ -805,12 +696,10 @@ export default function LandlordDashboard() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Clock className="h-5 w-5"/>
+                      <Clock className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">
-                          Rent Payment - Luxury Villa
-                        </p>
+                      <p className="font-medium">Rent Payment - Luxury Villa</p>
                         <p className="text-sm text-muted-foreground">
                           From: John & Lisa Smith
                         </p>
@@ -824,7 +713,7 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Clock className="h-5 w-5"/>
+                      <Clock className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">
@@ -843,12 +732,10 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Clock className="h-5 w-5"/>
+                      <Clock className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">
-                          Rent Payment - Cozy Studio
-                        </p>
+                      <p className="font-medium">Rent Payment - Cozy Studio</p>
                         <p className="text-sm text-muted-foreground">
                           From: Michael Chen
                         </p>
@@ -862,12 +749,10 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Clock className="h-5 w-5"/>
+                      <Clock className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">
-                          Rent Payment - Family Home
-                        </p>
+                      <p className="font-medium">Rent Payment - Family Home</p>
                         <p className="text-sm text-muted-foreground">
                           From: Amina Diallo
                         </p>
@@ -897,7 +782,7 @@ export default function LandlordDashboard() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 text-amber-700">
-                        <Clock className="h-5 w-5"/>
+                      <Clock className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">Plumbing Issue</p>
@@ -914,7 +799,7 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700">
-                        <CheckCircle2 className="h-5 w-5"/>
+                      <CheckCircle2 className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">AC Repair</p>
@@ -931,7 +816,7 @@ export default function LandlordDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 text-amber-700">
-                        <Clock className="h-5 w-5"/>
+                      <Clock className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">Electrical Issue</p>
@@ -963,4 +848,3 @@ export default function LandlordDashboard() {
       </div>
   );
 }
-
