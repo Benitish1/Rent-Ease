@@ -44,4 +44,8 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByEmail(email);
         return userOpt.isPresent() && password.equals(userOpt.get().getPassword());
     }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 }

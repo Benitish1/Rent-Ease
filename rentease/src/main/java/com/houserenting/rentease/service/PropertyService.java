@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -169,6 +170,12 @@ public class PropertyService {
                 .collect(Collectors.toList());
     }
 
+    public PropertyResponse getPropertyById(Long propertyId) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found with id: " + propertyId));
+        return convertToPropertyResponse(property);
+    }
+
     public List<PropertyResponse> getAllProperties() {
         return propertyRepository.findAll()
                 .stream()
@@ -197,6 +204,10 @@ public class PropertyService {
                 .stream()
                 .map(this::convertToPropertyResponse)
                 .collect(Collectors.toList());
+    }
+
+    public List<Map<String, Object>> getPropertyPriceDistribution(Long landlordId) {
+        return propertyRepository.getPropertyPriceDistribution(landlordId);
     }
 
     @Transactional

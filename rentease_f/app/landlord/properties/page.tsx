@@ -32,7 +32,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LandlordLayout } from "@/components/landlord-layout";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,7 +62,7 @@ export default function PropertiesPage() {
       const fetched = await fetchProperties();
       console.log("Fetched properties:", fetched);
       if (Array.isArray(fetched)) {
-        setProperties(fetched.sort((a, b) => a.title.localeCompare(b.title)));
+        setProperties(fetched);
       }
     } catch (err) {
       console.error("Error loading properties:", err);
@@ -99,183 +98,157 @@ export default function PropertiesPage() {
   };
 
   return (
-    <LandlordLayout>
-      <div className="p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">My Properties</h1>
-            <p className="text-muted-foreground">
-              Manage your rental properties
-            </p>
-          </div>
-          <Button asChild>
-            <Link href="/landlord/properties/add">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Property
-            </Link>
-          </Button>
+    <div className="p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">My Properties</h1>
+          <p className="text-muted-foreground">Manage your rental properties</p>
         </div>
+        <Button asChild>
+          <Link href="/landlord/properties/add">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Property
+          </Link>
+        </Button>
+      </div>
 
-        <div className="mb-6 flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search properties..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button
-            variant="outline"
-            className="sm:w-auto"
-            onClick={() => setCurrentPage(1)}
-          >
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search properties..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
+        <Button
+          variant="outline"
+          className="sm:w-auto"
+          onClick={() => setCurrentPage(1)}
+        >
+          <Filter className="mr-2 h-4 w-4" />
+          Filter
+        </Button>
+      </div>
 
-        <Tabs defaultValue="all" className="mb-6">
-          <TabsList>
-            <TabsTrigger value="all">
-              All Properties ({properties.length})
-            </TabsTrigger>
-            <TabsTrigger value="APPROVED">
-              Available (
-              {properties.filter((p) => p.status === "APPROVED").length})
-            </TabsTrigger>
-            <TabsTrigger value="PENDING">
-              Pending ({properties.filter((p) => p.status === "PENDING").length}
-              )
-            </TabsTrigger>
-            <TabsTrigger value="RENTED">
-              Rented ({properties.filter((p) => p.status === "RENTED").length})
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="all" className="mb-6">
+        <TabsList>
+          <TabsTrigger value="all">
+            All Properties ({properties.length})
+          </TabsTrigger>
+          <TabsTrigger value="APPROVED">
+            Available (
+            {properties.filter((p) => p.status === "APPROVED").length})
+          </TabsTrigger>
+          <TabsTrigger value="PENDING">
+            Pending ({properties.filter((p) => p.status === "PENDING").length})
+          </TabsTrigger>
+          <TabsTrigger value="RENTED">
+            Rented ({properties.filter((p) => p.status === "RENTED").length})
+          </TabsTrigger>
+        </TabsList>
 
-          {["all", "APPROVED", "PENDING", "RENTED"].map((tab) => {
-            const filteredProperties = properties
-              .filter((p) => tab === "all" || p.status === tab)
-              .filter(
-                (p) =>
-                  searchQuery === "" ||
-                  p.title.toLowerCase().includes(searchQuery.toLowerCase())
-              );
-            const totalPages = Math.ceil(
-              filteredProperties.length / propertiesPerPage
+        {["all", "APPROVED", "PENDING", "RENTED"].map((tab) => {
+          const filteredProperties = properties
+            .filter((p) => tab === "all" || p.status === tab)
+            .filter(
+              (p) =>
+                searchQuery === "" ||
+                p.title.toLowerCase().includes(searchQuery.toLowerCase())
             );
-            const startIndex = (currentPage - 1) * propertiesPerPage;
-            const paginatedProperties = filteredProperties.slice(
-              startIndex,
-              startIndex + propertiesPerPage
-            );
+          const totalPages = Math.ceil(
+            filteredProperties.length / propertiesPerPage
+          );
+          const startIndex = (currentPage - 1) * propertiesPerPage;
+          const paginatedProperties = filteredProperties.slice(
+            startIndex,
+            startIndex + propertiesPerPage
+          );
 
-            return (
-              <TabsContent key={tab} value={tab} className="mt-6">
-                {filteredProperties.length === 0 ? (
+          return (
+            <TabsContent key={tab} value={tab} className="mt-6">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {paginatedProperties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onDelete={() => setPropertyToDelete(property)}
+                  />
+                ))}
+              </div>
+              {tab === "RENTED" &&
+                properties.filter((p) => p.status === "RENTED").length ===
+                  0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="rounded-full bg-muted p-6 mb-4">
-                      <Search className="h-10 w-10 text-muted-foreground" />
+                      <Home className="h-10 w-10 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-medium mb-2">
-                      No properties found
+                      No rented properties
                     </h3>
                     <p className="text-muted-foreground max-w-md">
-                      {searchQuery
-                        ? `No properties found matching "${searchQuery}"`
-                        : "No properties available in this category"}
+                      Properties that are currently rented will appear here.
                     </p>
                   </div>
-                ) : (
-                  <>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {paginatedProperties.map((property) => (
-                        <PropertyCard
-                          key={property.id}
-                          property={property}
-                          onDelete={() => setPropertyToDelete(property)}
-                        />
-                      ))}
-                    </div>
-                    {tab === "RENTED" &&
-                      properties.filter((p) => p.status === "RENTED").length ===
-                        0 && (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                          <div className="rounded-full bg-muted p-6 mb-4">
-                            <Home className="h-10 w-10 text-muted-foreground" />
-                          </div>
-                          <h3 className="text-lg font-medium mb-2">
-                            No rented properties
-                          </h3>
-                          <p className="text-muted-foreground max-w-md">
-                            Properties that are currently rented will appear
-                            here.
-                          </p>
-                        </div>
-                      )}
-                    {filteredProperties.length > 0 && (
-                      <div className="mt-6 flex items-center justify-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.max(prev - 1, 1))
-                          }
-                          disabled={currentPage === 1}
-                        >
-                          Previous
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
-                          Page {currentPage} of {totalPages}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setCurrentPage((prev) =>
-                              Math.min(prev + 1, totalPages)
-                            )
-                          }
-                          disabled={currentPage === totalPages}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    )}
-                  </>
                 )}
-              </TabsContent>
-            );
-          })}
-        </Tabs>
+              {filteredProperties.length > 0 && (
+                <div className="mt-6 flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          );
+        })}
+      </Tabs>
 
-        <AlertDialog
-          open={!!propertyToDelete}
-          onOpenChange={() => setPropertyToDelete(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                property and all associated data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteProperty}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </LandlordLayout>
+      <AlertDialog
+        open={!!propertyToDelete}
+        onOpenChange={() => setPropertyToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              property and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteProperty}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
 

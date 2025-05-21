@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/properties")
@@ -33,6 +34,11 @@ public class PropertyController {
     @GetMapping("/landlord/{landlordId}")
     public ResponseEntity<List<PropertyResponse>> getPropertiesByLandlord(@PathVariable Long landlordId) {
         return ResponseEntity.ok(propertyService.getPropertiesByLandlord(landlordId));
+    }
+
+    @GetMapping("/{propertyId}")
+    public ResponseEntity<PropertyResponse> getPropertyById(@PathVariable Long propertyId) {
+        return ResponseEntity.ok(propertyService.getPropertyById(propertyId));
     }
 
     @GetMapping
@@ -69,5 +75,11 @@ public class PropertyController {
             @RequestParam Long landlordId) {
         propertyService.deleteProperty(propertyId, landlordId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/price-distribution")
+    public ResponseEntity<List<Map<String, Object>>> getPropertyPriceDistribution(
+            @RequestParam Long landlordId) {
+        return ResponseEntity.ok(propertyService.getPropertyPriceDistribution(landlordId));
     }
 }

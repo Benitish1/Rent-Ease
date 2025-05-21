@@ -6,11 +6,33 @@ const API_BASE_URL = "http://localhost:8082/api";
 // Basic Axios client (no auth headers)
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // Enable sending cookies and authentication headers
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+// Add response interceptor for better error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error("Response error:", error.response.data);
+      throw error.response.data;
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error("Request error:", error.request);
+      throw new Error(
+        "No response from server. Please check if the server is running."
+      );
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error("Error:", error.message);
+      throw error;
+    }
+  }
+);
 
 // === AUTH ENDPOINTS ===
 
@@ -19,7 +41,7 @@ export const signup = async (userData) => {
     const response = await apiClient.post("/auth/signup", userData);
     return response.data;
   } catch (error) {
-    throw error.response?.data || error;
+    throw error;
   }
 };
 
@@ -117,7 +139,7 @@ export const login = async (email, password, role) => {
     // No token saving
     return response.data;
   } catch (error) {
-    throw error.response?.data || error;
+    throw error;
   }
 };
 
@@ -147,7 +169,7 @@ export const fetchProfile = async () => {
     const response = await apiClient.get("/user/profile");
     return response.data;
   } catch (error) {
-    throw error.response?.data || error;
+    throw error;
   }
 };
 
@@ -160,7 +182,16 @@ export const fetchProperties = async () => {
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data || error;
+    throw error;
+  }
+};
+
+export const fetchProperty = async (propertyId) => {
+  try {
+    const response = await apiClient.get(`/properties/${propertyId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
   }
 };
 
@@ -171,7 +202,7 @@ export const deleteProperty = async (propertyId, landlordId) => {
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data || error;
+    throw error;
   }
 };
 
@@ -199,6 +230,16 @@ export const createProperty = async (propertyData, images, landlordId) => {
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data || error;
+    throw error;
+  }
+};
+
+// === FORGOT PASSWORD ===
+export const forgotPassword = async (email) => {
+  try {
+    const response = await apiClient.post("/auth/forgot-password", { email });
+    return response.data;
+  } catch (error) {
+    throw error;
   }
 };

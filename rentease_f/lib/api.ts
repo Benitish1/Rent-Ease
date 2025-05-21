@@ -177,6 +177,15 @@ export const fetchProperties = async (): Promise<Property[]> => {
   }
 };
 
+export const fetchProperty = async (propertyId: number): Promise<Property> => {
+  try {
+    const response = await apiClient.get(`/properties/${propertyId}`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
 export const deleteProperty = async (propertyId: number, landlordId: number): Promise<void> => {
   try {
     const response = await apiClient.delete(`/properties/${propertyId}`, {
@@ -211,6 +220,16 @@ export const createProperty = async (
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+// === FORGOT PASSWORD ===
+export const forgotPassword = async (email: string) => {
+  try {
+    const response = await apiClient.post("/auth/forgot-password", { email });
     return response.data;
   } catch (error: any) {
     throw error.response?.data || error;

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
 
@@ -34,4 +35,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                         @Param("bedrooms") Integer bedrooms,
                         @Param("available") Boolean available,
                         @Param("landlordId") Long landlordId);
+
+        @Query("SELECT p.price as price, COUNT(p) as count FROM Property p " +
+                        "WHERE p.landlord.id = :landlordId " +
+                        "GROUP BY p.price " +
+                        "ORDER BY p.price")
+        List<Map<String, Object>> getPropertyPriceDistribution(@Param("landlordId") Long landlordId);
 }

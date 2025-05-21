@@ -151,7 +151,13 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
 
         <div className="mb-8 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-4">
           <div className="relative col-span-1 row-span-2 aspect-[3/2] overflow-hidden rounded-lg md:col-span-2 lg:col-span-2">
-            <Image src={property.images[0] || "/placeholder.svg"} alt={property.title} fill className="object-cover" />
+            <Image 
+              src={property.images[0] || "/placeholder.svg"} 
+              alt={property.title} 
+              fill 
+              className="object-cover"
+              priority 
+            />
           </div>
           {property.images.slice(1, 5).map((image, index) => (
             <div key={index} className="relative aspect-[3/2] overflow-hidden rounded-lg">
