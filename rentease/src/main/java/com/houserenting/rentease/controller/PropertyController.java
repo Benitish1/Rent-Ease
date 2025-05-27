@@ -82,4 +82,13 @@ public class PropertyController {
             @RequestParam Long landlordId) {
         return ResponseEntity.ok(propertyService.getPropertyPriceDistribution(landlordId));
     }
+
+    @PutMapping("/{propertyId}")
+    public ResponseEntity<PropertyResponse> updateProperty(
+            @PathVariable Long propertyId,
+            @RequestPart("property") PropertyRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam Long landlordId) {
+        return ResponseEntity.ok(propertyService.updateProperty(propertyId, request, images, landlordId));
+    }
 }

@@ -1,110 +1,196 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Heart, MapPin, Star, Bed, Bath, Square } from "lucide-react"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import Link from "next/link";
+import Image from "next/image";
+import {
+  Heart,
+  MapPin,
+  Star,
+  Bed,
+  Bath,
+  Square,
+  MoreVertical,
+  MessageCircle,
+} from "lucide-react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PropertyCardProps {
-  id: string
-  title: string
-  location: string
-  price: number
-  bedrooms: number
-  bathrooms: number
-  area: number
-  image: string
-  rating: number
-  isFeatured?: boolean
-  isNew?: boolean
+  property: {
+    id: number;
+    title: string;
+    description: string;
+    price: number;
+    bedrooms: number;
+    bathrooms: number;
+    area: number;
+    mainPhoto: string;
+    type: string;
+    location: string;
+    furnished: string;
+    availableFrom: string;
+    isFavorited?: boolean;
+    bookingStatus?: "PENDING" | "APPROVED" | "CANCELLED" | null;
+    landlordId: number;
+  };
+  onAddToFavorites?: () => void;
+  onStartChat: () => void;
 }
 
 export function PropertyCard({
-  id,
-  title,
-  location,
-  price,
-  bedrooms,
-  bathrooms,
-  area,
-  image,
-  rating,
-  isFeatured,
-  isNew,
+  property,
+  onAddToFavorites,
+  onStartChat,
 }: PropertyCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const getBookingStatusBadge = () => {
+    if (!property.bookingStatus) return null;
+
+    const statusConfig = {
+      PENDING: {
+        label: "Pending Booking",
+        variant: "warning" as const,
+        className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      },
+      APPROVED: {
+        label: "Booked",
+        variant: "success" as const,
+        className: "bg-green-100 text-green-800 border-green-200",
+      },
+      CANCELLED: {
+        label: "Cancelled",
+        variant: "destructive" as const,
+        className: "bg-red-100 text-red-800 border-red-200",
+      },
+    };
+
+    const config = statusConfig[property.bookingStatus];
+    if (!config) return null;
+
+    return (
+      <Badge variant={config.variant} className={`ml-2 ${config.className}`}>
+        {config.label}
+      </Badge>
+    );
+  };
+
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
-      <div className="relative aspect-[4/3]">
+    <Card
+      className="overflow-hidden transition-all hover:shadow-lg"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative h-48 w-full">
         <Image
-          src={image || "/placeholder.svg"}
-          alt={title}
+          src={property.mainPhoto || "/placeholder.svg"}
+          alt={property.title}
           fill
-          className="object-cover transition-transform hover:scale-105"
+          className="object-cover"
         />
-        <div className="absolute top-3 left-3 flex gap-2">
-          {isFeatured && (
-            <Badge variant="default" className="bg-primary text-primary-foreground">
-              Featured
-            </Badge>
-          )}
-          {isNew && (
-            <Badge variant="secondary" className="bg-green-500 text-white hover:bg-green-600">
-              New
-            </Badge>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/80 text-rose-500 backdrop-blur-sm hover:bg-white/90 hover:text-rose-600"
-        >
-          <Heart className="h-5 w-5" />
-          <span className="sr-only">Add to favorites</span>
-        </Button>
+        {property.bookingStatus && (
+          <div className="absolute top-2 right-2">
+            {getBookingStatusBadge()}
+          </div>
+        )}
       </div>
-      <CardContent className="p-4">
+      <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-semibold line-clamp-1">{title}</h3>
-            <div className="mt-1 flex items-center text-sm text-muted-foreground">
-              <MapPin className="mr-1 h-3.5 w-3.5" />
-              <span className="line-clamp-1">{location}</span>
-            </div>
+            <CardTitle className="line-clamp-1">{property.title}</CardTitle>
+            <CardDescription className="line-clamp-1">
+              {property.location}
+            </CardDescription>
           </div>
-          <div className="flex items-center gap-1 text-amber-500">
-            <Star className="h-4 w-4 fill-current" />
-            <span className="text-sm font-medium">{rating.toFixed(1)}</span>
+          <Badge variant="secondary" className="ml-2">
+            {property.type}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-3 gap-2 text-sm">
+          <div>
+            <p className="text-muted-foreground">Bedrooms</p>
+            <p className="font-medium">{property.bedrooms}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Bathrooms</p>
+            <p className="font-medium">{property.bathrooms}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Area</p>
+            <p className="font-medium">{property.area}m²</p>
           </div>
         </div>
-        <div className="mt-4 flex items-center justify-between gap-4 text-sm">
-          <div className="flex items-center gap-1">
-            <Bed className="h-4 w-4 text-muted-foreground" />
-            <span>
-              {bedrooms} {bedrooms === 1 ? "bed" : "beds"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Bath className="h-4 w-4 text-muted-foreground" />
-            <span>
-              {bathrooms} {bathrooms === 1 ? "bath" : "baths"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Square className="h-4 w-4 text-muted-foreground" />
-            <span>{area} m²</span>
-          </div>
+        <div className="mt-4">
+          <p className="text-muted-foreground">Description</p>
+          <p className="line-clamp-2 text-sm">{property.description}</p>
+        </div>
+        <div className="mt-4">
+          <p className="text-muted-foreground">Furnished</p>
+          <p className="font-medium capitalize">{property.furnished}</p>
+        </div>
+        <div className="mt-4">
+          <p className="text-muted-foreground">Available From</p>
+          <p className="font-medium">
+            {new Date(property.availableFrom).toLocaleDateString()}
+          </p>
         </div>
       </CardContent>
-      <CardFooter className="flex items-center justify-between border-t p-4">
-        <div>
-          <p className="text-lg font-semibold">${price.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground">per month</p>
+      <CardFooter className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Price per month</p>
+            <p className="text-2xl font-bold">${property.price}</p>
+          </div>
+          <Button variant="outline" onClick={onAddToFavorites}>
+            <Heart
+              className={`mr-2 h-4 w-4 ${
+                property.isFavorited ? "fill-red-500 text-red-500" : ""
+              }`}
+            />
+            {property.isFavorited ? "Favorited" : "Favorite"}
+          </Button>
         </div>
-        <Button asChild>
-          <Link href={`/properties/${id}`}>View Details</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Link href={`/tenant/properties/${property.id}`} className="flex-1">
+            <Button variant="outline" className="w-full">
+              View Details
+            </Button>
+          </Link>
+          <Link href={`/tenant/properties/${property.id}`} className="flex-1">
+            <Button className="w-full">Book Now</Button>
+          </Link>
+        </div>
+        <div className="flex justify-between items-center">
+          <Button variant="outline" className="flex-1" onClick={onStartChat}>
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Message Landlord
+          </Button>
+        </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

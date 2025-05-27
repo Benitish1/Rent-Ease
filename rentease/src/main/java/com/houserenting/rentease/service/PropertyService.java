@@ -254,6 +254,86 @@ public class PropertyService {
         propertyRepository.delete(property);
     }
 
+    @Transactional
+    public PropertyResponse updateProperty(Long propertyId, PropertyRequest request, List<MultipartFile> images,
+            Long landlordId) {
+        try {
+            ensureUploadDirectoryExists();
+
+            // Find the existing property
+            Property property = propertyRepository.findById(propertyId)
+                    .orElseThrow(() -> new RuntimeException("Property not found with id: " + propertyId));
+
+            // Verify that the property belongs to the landlord
+            if (!property.getLandlord().getId().equals(landlordId)) {
+                throw new RuntimeException("Unauthorized to update this property");
+            }
+
+            // Handle image uploads if provided
+            if (images != null && !images.isEmpty()) {
+                // Delete old images
+                if (property.getMainPhoto() != null) {
+                    deleteImageFile(property.getMainPhoto());
+                }
+                if (property.getAdditionalPhotos() != null) {
+                    property.getAdditionalPhotos().forEach(this::deleteImageFile);
+                }
+
+                // Upload new images
+                List<String> imageUrls = new ArrayList<>();
+                for (MultipartFile image : images) {
+                    if (!image.isEmpty()) {
+                        String fileName = UUID.randomUUID() + "-" + image.getOriginalFilename();
+                        File dest = new File(uploadDir + File.separator + fileName);
+                        try {
+                            image.transferTo(dest);
+                            imageUrls.add(getImageUrl(fileName));
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to upload image: " + e.getMessage(), e);
+                        }
+                    }
+                }
+
+                if (!imageUrls.isEmpty()) {
+                    property.setMainPhoto(imageUrls.get(0));
+                    property.setAdditionalPhotos(imageUrls);
+                }
+            }
+
+            // Update property details from the request
+            property.setTitle(request.getTitle());
+            property.setDescription(request.getDescription());
+            property.setType(request.getType());
+            property.setAddress(request.getAddress());
+            property.setNeighborhood(request.getNeighborhood());
+            property.setCity(request.getCity());
+            property.setDistrict(request.getDistrict());
+            property.setBedrooms(request.getBedrooms());
+            property.setBathrooms(request.getBathrooms());
+            property.setArea(request.getArea());
+            property.setYearBuilt(request.getYearBuilt());
+            property.setParkingSpaces(request.getParkingSpaces());
+            property.setFurnished(request.getFurnished());
+            property.setAmenities(request.getAmenities());
+            property.setVideoUrl(request.getVideoUrl());
+            property.setPrice(request.getPrice());
+            property.setDeposit(request.getDeposit());
+            property.setAvailableFrom(
+                    request.getAvailableFrom() != null ? request.getAvailableFrom() : LocalDate.now());
+            property.setMinLeaseMonths(request.getMinLeaseMonths());
+            property.setUtilitiesIncluded(request.getUtilitiesIncluded());
+            property.setPets(request.getPets());
+            property.setSmoking(request.getSmoking());
+            property.setEvents(request.getEvents());
+            property.setMaxOccupants(request.getMaxOccupants());
+
+            Property updatedProperty = propertyRepository.save(property);
+            return convertToPropertyResponse(updatedProperty);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update property: " + e.getMessage(), e);
+        }
+    }
+
     private void deleteImageFile(String fileName) {
         try {
             File file = new File(uploadDir + File.separator + fileName);

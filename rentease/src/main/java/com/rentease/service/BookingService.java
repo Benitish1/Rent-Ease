@@ -1,13 +1,13 @@
-package com.houserenting.rentease.service;
+package com.rentease.service;
 
-import com.houserenting.rentease.dto.BookingDTO;
-import com.houserenting.rentease.model.Booking;
-import com.houserenting.rentease.model.BookingStatus;
-import com.houserenting.rentease.model.Property;
-import com.houserenting.rentease.model.User;
-import com.houserenting.rentease.repository.BookingRepository;
-import com.houserenting.rentease.repository.PropertyRepository;
-import com.houserenting.rentease.repository.UserRepository;
+import com.rentease.dto.BookingDTO;
+import com.rentease.model.Booking;
+import com.rentease.model.BookingStatus;
+import com.rentease.model.Property;
+import com.rentease.model.User;
+import com.rentease.repository.BookingRepository;
+import com.rentease.repository.PropertyRepository;
+import com.rentease.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -108,7 +108,11 @@ public class BookingService {
         dto.setTenantId(booking.getTenant().getId());
         dto.setStartDate(booking.getStartDate());
         dto.setEndDate(booking.getEndDate());
-        dto.setStatus(booking.getStatus().name());
+        dto.setStatus(booking.getStatus());
+        dto.setPropertyTitle(booking.getProperty().getTitle());
+        dto.setTenantName(booking.getTenant().getFirstName() + " " + booking.getTenant().getLastName());
+        dto.setLandlordName(booking.getProperty().getLandlord().getFirstName() + " " +
+                booking.getProperty().getLandlord().getLastName());
         return dto;
     }
 

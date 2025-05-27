@@ -49,4 +49,7 @@ public class BookingDTO {
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
+
+    public void setStatus(String name) {
+    }
 }

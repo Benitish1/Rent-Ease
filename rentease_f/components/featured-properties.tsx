@@ -85,7 +85,24 @@ export function FeaturedProperties() {
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {properties.map((property) => (
-        <PropertyCard key={property.id} {...property} />
+        <PropertyCard
+          key={property.id}
+          property={{
+            id: Number(property.id.replace("prop", "")),
+            title: property.title,
+            description: "A beautiful property in a great location",
+            price: property.price,
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            area: property.area,
+            mainPhoto: property.image,
+            type: "apartment",
+            location: property.location,
+            furnished: "furnished",
+            availableFrom: new Date().toISOString(),
+            isFavorited: false,
+          }}
+        />
       ))}
     </div>
   );

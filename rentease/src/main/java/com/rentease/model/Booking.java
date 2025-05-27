@@ -1,4 +1,4 @@
-package com.houserenting.rentease.model;
+package com.rentease.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -24,19 +24,4 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
-
-    private String notes;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDate.now();
-        updatedAt = LocalDate.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDate.now();
-    }
 }
